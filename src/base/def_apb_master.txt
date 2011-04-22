@@ -33,5 +33,5 @@ SWAP.GLOBAL #FFD        #1                 ##Flip-flop delay
   
 SWAP.GLOBAL ADDR_BITS   16                 ##APB address bits
 
-##DEFINE                  APB3               ##if set use pready and pslverr APB3 signals
+DEFINE                  APB3               ##if set use pready and pslverr APB3 signals
                              
