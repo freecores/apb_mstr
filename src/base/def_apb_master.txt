@@ -31,7 +31,9 @@ INCLUDE def_apb_master_static.txt
 
 SWAP.GLOBAL #FFD        #1                 ##Flip-flop delay
   
-SWAP.GLOBAL ADDR_BITS   16                 ##APB address bits
+SWAP.USER PREFIX             apb_master     ##Prefix for all module and file names
+  
+SWAP.GLOBAL.USER ADDR_BITS   16                 ##APB address bits
 
-DEFINE                  APB3               ##if set use pready and pslverr APB3 signals
+DEFINE.USER                  APB3               ##if set use pready and pslverr APB3 signals
                              

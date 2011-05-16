@@ -65,13 +65,13 @@
 //////////////////////////////////////
 
 
-OUTFILE apb_master.v
+OUTFILE PREFIX.v
 
 INCLUDE def_apb_master.txt
 
 VERIFY (DATA_BITS==32) else only 32 bit data supported
   
-module apb_master(PORTS);
+module PREFIX(PORTS);
 
    
    input                    clk;
@@ -99,18 +99,18 @@ ENDIF APB3
    initial
      begin
         #1;
-        apb_master_axi_master.enable_all; 
-        apb_master_axi_master.use_addr_base=1;
-        apb_master_axi_master.len_min=0;
-        apb_master_axi_master.len_max=0;
-        apb_master_axi_master.size_min=2;
-        apb_master_axi_master.size_max=2;     
+        PREFIX_axi_master.enable_all; 
+        PREFIX_axi_master.use_addr_base=1;
+        PREFIX_axi_master.len_min=0;
+        PREFIX_axi_master.len_max=0;
+        PREFIX_axi_master.size_min=2;
+        PREFIX_axi_master.size_max=2;     
      end
    
    
-   CREATE axi_master.v DEFCMD(SWAP.GLOBAL CONST(PREFIX) apb_master_axi_master)
+   CREATE axi_master.v DEFCMD(SWAP.GLOBAL CONST(PREFIX) PREFIX_axi_master)
                                
-     apb_master_axi_master apb_master_axi_master(
+     PREFIX_axi_master PREFIX_axi_master(
                            .clk(clk),
                            .reset(reset),
                            .GROUP_STUB_AXI(GROUP_STUB_AXI),
@@ -118,9 +118,9 @@ ENDIF APB3
                            );
 
    
-   CREATE axi2apb.v DEFCMD(SWAP CONST(SLAVE_NUM) 1) DEFCMD(SWAP.GLOBAL CONST(PREFIX) apb_master)
+   CREATE axi2apb.v DEFCMD(SWAP CONST(SLAVE_NUM) 1) DEFCMD(SWAP.GLOBAL CONST(PREFIX) PREFIX_axi2apb)
 
-   apb_master_axi2apb apb_master_axi2apb(
+   PREFIX_axi2apb PREFIX_axi2apb(
                            .clk(clk),
                            .reset(reset),
                            .GROUP_STUB_AXI(GROUP_STUB_AXI),
@@ -140,7 +140,7 @@ ENDIF APB3
       input [ADDR_BITS-1:0]  addr;
       input [DATA_BITS-1:0]  wdata;
       begin
-         apb_master_axi_master.write_single(0, addr, wdata);
+         PREFIX_axi_master.write_single(0, addr, wdata);
       end
    endtask
 
@@ -148,7 +148,7 @@ ENDIF APB3
       input [ADDR_BITS-1:0]  addr;
       output [DATA_BITS-1:0]  rdata;
       begin
-         apb_master_axi_master.read_single(0, addr, rdata);
+         PREFIX_axi_master.read_single(0, addr, rdata);
       end
    endtask
 
@@ -156,7 +156,7 @@ ENDIF APB3
       input [ADDR_BITS-1:0]  addr;
       input [DATA_BITS-1:0]  expected;
       begin
-         apb_master_axi_master.check_single(0, addr, expected);
+         PREFIX_axi_master.check_single(0, addr, expected);
       end
    endtask
 
@@ -164,7 +164,7 @@ ENDIF APB3
       input [ADDR_BITS-1:0]  addr;
       input [DATA_BITS-1:0]  data;
       begin
-         apb_master_axi_master.write_and_check_single(0, addr, data);
+         PREFIX_axi_master.write_and_check_single(0, addr, data);
       end
    endtask
 

@@ -28,10 +28,10 @@
 //////////////////////////////////////////////////////////////////##>
 
 INCLUDE def_axi2apb.txt
-OUTFILE PREFIX_axi2apb_mux.v
+OUTFILE PREFIX_mux.v
 
 ITER SX
-module  PREFIX_axi2apb_mux (PORTS);
+module  PREFIX_mux (PORTS);
 
 
    input 		      clk;
