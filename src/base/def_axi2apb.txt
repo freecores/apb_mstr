@@ -29,7 +29,7 @@
 
 INCLUDE   def_axi2apb_static.txt  
 
-SWAP      #FFD        #1              ## flip-flop delay
+SWAP.GLOBAL      #FFD        #1              ## flip-flop delay
 
 SWAP.USER      PREFIX      axi2apb         ## prefix for all modules and file names
 

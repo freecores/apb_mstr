@@ -31,7 +31,7 @@ ENDUSER ##don't use AXI master USER params in gui
 INCLUDE def_axi_master.txt 
 STARTUSER
 
-SWAP MODEL_NAME APB master stub
+SWAP.GLOBAL MODEL_NAME APB master stub
   
 SWAP.GLOBAL DATA_BITS   32                 ##AXI and APB data bits
   
