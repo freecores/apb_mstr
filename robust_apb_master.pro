@@ -1,4 +1,4 @@
-##RobustVerilog project 
+PROJDIR = run 
 
 SRCFILE = apb_master.v
 DEFFILE =

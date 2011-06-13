@@ -68,7 +68,7 @@ module  PREFIX_mux (PORTS);
    always @(*)
      begin
 	casex (cmd_addr[ADDR_MSB:ADDR_LSB])
-	  DEC_ADDRSX : slave_num = SLV_BITS'dSX;
+	  DEC_BITSDEC_ADDRSX : slave_num = SLV_BITS'dSX;
 	  
 	  default : slave_num = SLV_BITS'dSLAVE_NUM; //decode error
 	endcase

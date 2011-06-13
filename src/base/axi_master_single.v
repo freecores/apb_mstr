@@ -36,7 +36,7 @@ module PREFIX_single(PORTS);
    parameter                           MASTER_NUM  = 0;
    parameter                           MASTER_ID   = 0;
    parameter                           MASTER_PEND = 0;
-   
+
 CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
 `include "prgen_rand.v"
    
@@ -50,7 +50,6 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
 			               (MAX_CMDS <= 256) ? 8 :
 			               (MAX_CMDS <= 512) ? 9 : 0; //0 is ilegal
                                        
-     
    
    input 			       clk;
    input                               reset;
@@ -75,6 +74,8 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
    reg 				       rd_enable = 0;
    reg                                 wr_enable = 0;
    reg                                 wait_for_write = 0;
+   reg                                 err_on_wr_resp = 1;
+   reg                                 err_on_rd_resp = 1;
    
    reg                                 scrbrd_enable = 0;
    reg [LEN_BITS-1:0] 		       wvalid_cnt;
@@ -225,7 +226,7 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
    assign 	  AWADDR  = wr_cmd_addr;
    assign 	  AWLEN   = wr_cmd_len;
    assign 	  AWSIZE  = wr_cmd_size;
-   assign 	  AWID    = MASTER_ID;
+   assign         AWID    = MASTER_ID;
    assign 	  AWBURST = 2'd1; //INCR only
    assign 	  AWCACHE = 4'd0; //not supported
    assign 	  AWPROT  = 4'd0; //not supported
@@ -249,7 +250,7 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
    assign 	  ARLOCK  = 2'd0; //not supported
 
    assign         rd_fifo_data_in = RDATA;
-   assign         rd_fifo_resp_in = BRESP;
+   assign         rd_fifo_resp_in = RRESP;
    
    assign 	  wr_data_bytes = 1'b1 << wr_data_size;
 
@@ -325,7 +326,7 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
 
          if (rd_cmd_full) enable = 1; //start stub not started yet
          
-         wait ((!rd_cmd_full) & (!rd_resp_full));
+         #FFD; wait ((!rd_cmd_full) & (!rd_resp_full));
 	 @(negedge clk); #FFD; 
 	 rd_cmd_push  = 1;
 	 rd_resp_push = 1;
@@ -350,7 +351,7 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
 	 
          if (wr_cmd_full) enable = 1; //start stub not started yet
          
-         wait ((!wr_cmd_full) & (!wr_data_full));
+         #FFD; wait ((!wr_cmd_full) & (!wr_data_full));
 	 @(negedge clk); #FFD; 
 	 wr_cmd_push  = 1; 
 	 wr_data_push = 1;
@@ -366,7 +367,7 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
       begin
 	 wr_fifo_data_in  = wdata;
 	 
-         wait (!wr_fifo_full);
+         #FFD; wait (!wr_fifo_full);
 	 @(negedge clk); #FFD; 
 	 wr_fifo_push = 1; 
 	 @(posedge clk); #FFD;
@@ -413,7 +414,7 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
 	 scrbrd_data_in  = data;
 	 scrbrd_mask_in  = mask;
 	 
-         wait (!scrbrd_full);
+         #FFD; wait (!scrbrd_full);
 	 @(negedge clk); #FFD; 
 	 scrbrd_push = 1; 
 	 @(posedge clk); #FFD;
@@ -480,11 +481,24 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
       reg [ADDR_BITS-1:0]  addr;
       reg [LEN_BITS-1:0]   len;
       reg [SIZE_BITS-1:0]  size;
-      
+
       begin
+         if (DATA_BITS==32) size_max = 2'b10;
          len   = rand(len_min, len_max);
          size  = rand(size_min, size_max);
          addr  = rand_align(addr_min, addr_max, 1 << size);
+         
+         if (ahb_bursts)
+           begin
+              len   = 
+                      len[3] ? 15 : 
+                      len[2] ? 7 : 
+                      len[1] ? 3 : 0;
+              if (len > 0)
+                size = (DATA_BITS == 64) ? 2'b11 : 2'b10; //AHB bursts always full data
+
+              addr = align(addr, EXPR(DATA_BITS/8)*(len+1)); //address aligned to burst size
+           end
          insert_wr_rd_scrbrd(addr, len, size);
       end
    endtask
@@ -528,13 +542,15 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
       reg [DATA_BITS-1:0] rdata;
       reg [1:0] resp;
       begin
-         wait (!rd_fifo_empty);
+         #FFD; wait (!rd_fifo_empty);
          rdata = rd_fifo_data;
          resp = rd_fifo_resp;
          @(negedge clk); #FFD; 
 	 rd_fifo_pop = 1; 
 	 @(posedge clk); #FFD;
 	 rd_fifo_pop = 0;
+         if ((resp != 2'b00) && (err_on_rd_resp))
+           $display("PREFIX_MASTER%0d: RRESP_ERROR: Received RRESP 2'b%0b.\tTime: %0d ns.", MASTER_NUM, resp, $time);
       end
    endtask
    
@@ -547,7 +563,7 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
       reg [DATA_BITS-1:0] rdata;
       reg [DATA_BITS-1:0] mask;
       begin
-         wait (!scrbrd_empty);
+         #FFD; wait (!scrbrd_empty);
          addr = scrbrd_addr;
          rdata = scrbrd_data;
          mask = scrbrd_mask;
@@ -563,12 +579,14 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
 
       reg [1:0] resp;
       begin
-         wait (!wr_resp_empty);
+         #FFD; wait (!wr_resp_empty);
          resp = wr_resp_resp;
          @(negedge clk); #FFD; 
 	 wr_resp_pop = 1; 
 	 @(posedge clk); #FFD;
 	 wr_resp_pop = 0;
+         if ((resp != 2'b00) && (err_on_wr_resp))
+           $display("PREFIX_MASTER%0d: BRESP_ERROR: Received BRESP 2'b%0b.\tTime: %0d ns.", MASTER_NUM, resp, $time);
       end
    endtask
    
@@ -625,7 +643,7 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
       begin
          read_single_ack(addr, rdata, resp);
          if (rdata !== expected)
-           $display("MASTER%0d: CHK_SINGLE_ERROR: Address: 0x%0h, Expected: 0x%0h, Received: 0x%0h.\tTime: %0d ns.", MASTER_NUM, addr, expected, rdata, $time);
+           $display("PREFIX_MASTER%0d: CHK_SINGLE_ERROR: Address: 0x%0h, Expected: 0x%0h, Received: 0x%0h.\tTime: %0d ns.", MASTER_NUM, addr, expected, rdata, $time);
       end
    endtask
                
@@ -665,7 +683,7 @@ CREATE prgen_rand.v DEFCMD(DEFINE NOT_IN_LIST)
          rdata_masked = rdata & mask;
          
          if (expected_data !== rdata_masked)
-           $display("MASTER%0d: SCRBRD_ERROR: Address: 0x%0h, Expected: 0x%0h, Received: 0x%0h.\tTime: %0d ns.", MASTER_NUM, addr, expected_data, rdata, $time);
+           $display("PREFIX_MASTER%0d: SCRBRD_ERROR: Address: 0x%0h, Expected: 0x%0h, Received: 0x%0h.\tTime: %0d ns.", MASTER_NUM, addr, expected_data, rdata, $time);
       end
    endtask
 
