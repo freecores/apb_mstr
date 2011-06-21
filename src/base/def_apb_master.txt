@@ -29,13 +29,16 @@
 
 REQUIRE(1.4)
 
-INCLUDE def_apb_master_static.txt 
-
+INCLUDE def_apb_master_static.txt
+  
+STARTUSER
+  
 SWAP.GLOBAL #FFD        #1                 ##Flip-flop delay
   
 SWAP.USER PREFIX             apb_master     ##Prefix for all module and file names
   
 SWAP.GLOBAL.USER ADDR_BITS   16                 ##APB address bits
+SWAP.GLOBAL.USER DATA_BITS   32                 ##AXI and APB data bits
 
 DEFINE.USER                  APB3               ##if set use pready and pslverr APB3 signals
                              

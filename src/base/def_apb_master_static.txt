@@ -27,13 +27,13 @@
 ////                                                             ////
 //////////////////////////////////////////////////////////////////##>
 
-ENDUSER ##don't use AXI master USER params in gui
+ENDUSER
 INCLUDE def_axi_master.txt 
 STARTUSER
-
-SWAP.GLOBAL MODEL_NAME APB master stub
   
-SWAP.GLOBAL DATA_BITS   32                 ##AXI and APB data bits
+VERIFY (DATA_BITS in 32..32) ##only 32 bit data supported
+  
+SWAP.GLOBAL MODEL_NAME APB master stub
   
 SWAP.GLOBAL ID_NUM      1                  ##Number of IDs (internal masters)
 SWAP.GLOBAL ID0_VAL     ID_BITS'b0000      ##AXI ID0

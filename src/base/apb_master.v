@@ -69,8 +69,6 @@ OUTFILE PREFIX.v
 
 INCLUDE def_apb_master.txt
 
-VERIFY (DATA_BITS==32) ##only 32 bit data supported
-  
 module PREFIX(PORTS);
 
    
