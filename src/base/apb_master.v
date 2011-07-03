@@ -1,4 +1,4 @@
-/////////////////////////////////////////////////////////////////////
+<##//////////////////////////////////////////////////////////////////
 ////                                                             ////
 ////  Author: Eyal Hochberg                                      ////
 ////          eyal@provartec.com                                 ////
@@ -25,7 +25,7 @@
 //// PURPOSE.  See the GNU Lesser General Public License for more////
 //// details. http://www.gnu.org/licenses/lgpl.html              ////
 ////                                                             ////
-/////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////##>
 
 //////////////////////////////////////
 //
@@ -106,7 +106,13 @@ ENDIF APB3
      end
    
    
-   CREATE axi_master.v DEFCMD(SWAP.GLOBAL CONST(PREFIX) PREFIX_axi_master)
+   CREATE axi_master.v \\
+DEFCMD(SWAP.GLOBAL CONST(PREFIX) PREFIX_axi_master) \\
+DEFCMD(SWAP.GLOBAL CONST(ADDR_BITS) ADDR_BITS) \\
+DEFCMD(SWAP.GLOBAL CONST(DATA_BITS) DATA_BITS) \\
+   DEFCMD(GROUP.USER AXI_ID overrides {)  \\
+   DEFCMD(0) \\ 
+   DEFCMD(})
                                
      PREFIX_axi_master PREFIX_axi_master(
                            .clk(clk),
@@ -116,7 +122,11 @@ ENDIF APB3
                            );
 
    
-   CREATE axi2apb.v DEFCMD(SWAP CONST(SLAVE_NUM) 1) DEFCMD(SWAP.GLOBAL CONST(PREFIX) PREFIX_axi2apb)
+   CREATE axi2apb.v \\
+DEFCMD(SWAP CONST(SLAVE_NUM) 1) \\ 
+DEFCMD(SWAP.GLOBAL CONST(PREFIX) PREFIX_axi2apb) \\
+DEFCMD(SWAP.GLOBAL CONST(ADDR_BITS) ADDR_BITS) \\
+DEFCMD(SWAP.GLOBAL CONST(DATA_BITS) DATA_BITS)
 
    PREFIX_axi2apb PREFIX_axi2apb(
                            .clk(clk),
